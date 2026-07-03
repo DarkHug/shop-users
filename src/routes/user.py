@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from src.dependencies.user_dependencies import get_user_service
-from src.schemas.user import UserCreate, UserRead, UserVerification
+from src.dtos.users import UserCreateDTO, UserReadDTO
+from src.exceptions.user_exceptions import DuplicateFieldError, EntityNotFoundError
 
 router = APIRouter(
     prefix="/users",
@@ -11,21 +12,23 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(user: UserCreate, service=Depends(get_user_service)) -> UserRead:
+async def create_user(dto: UserCreateDTO, service=Depends(get_user_service)):
     try:
-        return await service.create_user(user.model_dump())
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        await service.create(dto)
+    except DuplicateFieldError as e:
+
+        raise HTTPException(
+            status_code=409,
+            detail=str(e),
+        )
 
 
-@router.post("/verify", status_code=status.HTTP_202_ACCEPTED)
-async def verify_user(user: UserVerification, service=Depends(get_user_service)) -> UserRead:
-    user_to_verify = await service.verify_user(email=user.email, code=user.code)
-    if user_to_verify is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return user_to_verify
-
-
-@router.put("/revoke-code", status_code=status.HTTP_202_ACCEPTED)
-async def revoke_code(email: str, service=Depends(get_user_service)):
-    return await service.revoke_code(email=email)
+@router.get("/", status_code=status.HTTP_200_OK, response_model=UserReadDTO)
+async def get_user_by_email(email: str, service=Depends(get_user_service)):
+    try:
+        return await service.get_by_email(email=email)
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e),
+        )

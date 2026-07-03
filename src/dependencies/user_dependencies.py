@@ -1,10 +1,9 @@
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.repos.user_verification_repo import UserVerificationRepository
 
 from src.database.session import get_db
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.repos.user_repo import UserRepository
-from src.repos.user_verification_repo import UserVerificationRepository
 from src.services.user_service import UserService
 from src.services.verification import VerificationService
 

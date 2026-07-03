@@ -1,1 +1,1 @@
-from .user import User, UserCodeVerifications
+from .users import User, UserCodeVerifications
