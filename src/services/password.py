@@ -1,17 +1,14 @@
-from pwdlib import PasswordHash
+import hashlib
 
 from src.settings import settings
 
 
-class PasswordService:
-    def __init__(self):
-        self.pepper = settings.password.pepper
-        self.hasher = PasswordHash.recommended()
+class PasswordHash:
+    def __init__(self, pepper: str):
+        self._pepper = pepper
 
-    def hash_password(self, password: str) -> str:
-        password_with_pepper = password + self.pepper.get_secret_value()
-        return self.hasher.hash(password_with_pepper)
-
-    def verify_password(self, password: str, hashed_password: str) -> bool:
-        password_with_pepper = password + self.pepper.get_secret_value()
-        return self.hasher.verify(password_with_pepper, hashed_password)
+    def hash(self, password: str, salt: str) -> str:
+        password_to_hash = password + salt + self._pepper
+        for i in range(settings.password.hash_iterations):
+            password_to_hash = hashlib.sha256(password_to_hash.encode()).hexdigest()
+        return password_to_hash

@@ -3,8 +3,6 @@ import uuid
 
 from pydantic import BaseModel, field_validator, EmailStr
 
-EMAIL_REGEX = r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$"
-
 
 class UserCreateDTO(BaseModel):
     username: str
@@ -38,6 +36,7 @@ class UserCreateDBDTO(BaseModel):
     username: str
     email: EmailStr
     hashed_password: str
+    password_salt: str
 
 
 class UserReadDTO(BaseModel):

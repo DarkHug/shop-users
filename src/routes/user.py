@@ -1,34 +1,37 @@
+from http import HTTPStatus
+
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
-
-from src.dependencies.user_dependencies import get_user_service
+from dishka.integrations.fastapi import FromDishka, inject, DishkaRoute
 from src.dtos.users import UserCreateDTO, UserReadDTO
-from src.exceptions.user_exceptions import DuplicateFieldError, EntityNotFoundError
+from src.exceptions.users import EmailAlreadyExistsException, UsernameAlreadyExistsException, EmailNotFoundException
+from src.services.user_service import UserService
 
 router = APIRouter(
     prefix="/users",
     tags=["users"],
+    route_class=DishkaRoute,
 )
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(dto: UserCreateDTO, service=Depends(get_user_service)):
+async def create_user(dto: UserCreateDTO, service: FromDishka[UserService]):
     try:
         await service.create(dto)
-    except DuplicateFieldError as e:
+    except (EmailAlreadyExistsException, UsernameAlreadyExistsException) as e:
 
         raise HTTPException(
-            status_code=409,
-            detail=str(e),
+            status_code=HTTPStatus.CONFLICT,
+            detail=e.message,
         )
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=UserReadDTO)
-async def get_user_by_email(email: str, service=Depends(get_user_service)):
+async def get_user_by_email(email: str, service: FromDishka[UserService]):
     try:
         return await service.get_by_email(email=email)
-    except EntityNotFoundError as e:
+    except EmailNotFoundException as e:
         raise HTTPException(
-            status_code=404,
-            detail=str(e),
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=e.message,
         )

@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class PasswordSettings(BaseModel):
     pepper: SecretStr
+    hash_iterations: int
 
 
 class DatabaseSettings(BaseModel):
