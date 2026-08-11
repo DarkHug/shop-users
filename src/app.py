@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 import src.routes as routes
 from src.providers.password import PasswordProvider
+from src.providers.uow import UoWProvider
 from src.providers.user import UserProvider
 from src.providers.database import DatabaseProvider
 
@@ -20,6 +21,7 @@ def create_app() -> FastAPI:
         DatabaseProvider(),
         PasswordProvider(),
         UserProvider(),
+        UoWProvider()
     )
     setup_dishka(container=container, app=app)
 

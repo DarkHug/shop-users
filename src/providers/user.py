@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import (
 from src.repos.user_repo import UserRepository
 from src.services.password import PasswordHash
 from src.services.user_service import UserService
+from src.uow import UnitOfWork
 
 
 class UserProvider(Provider):
@@ -17,12 +18,12 @@ class UserProvider(Provider):
 
     @provide
     def get_service(self,
-                          user_repo: UserRepository,
-                          session: AsyncSession,
-                          password_hash: PasswordHash,
-                          ) -> UserService:
+                    user_repo: UserRepository,
+                    password_hash: PasswordHash,
+                    uow: UnitOfWork
+                    ) -> UserService:
         return UserService(
             password_hash=password_hash,
             user_repository=user_repo,
-            session=session,
+            uow=uow
         )
