@@ -5,23 +5,23 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 import src.routes as routes
-from src.providers.password import PasswordProvider
-from src.providers.uow import UoWProvider
-from src.providers.user import UserProvider
-from src.providers.database import DatabaseProvider
+from src.providers import AppProvider, DatabaseProvider, PasswordProvider, ServiceProvider, RepoProvider
+from src.settings import Settings
 
 
 def create_app() -> FastAPI:
+    settings = Settings()
     app = FastAPI()
 
     for router in routes.routers:
         app.include_router(router)
 
     container = make_async_container(
+        AppProvider(settings),
         DatabaseProvider(),
         PasswordProvider(),
-        UserProvider(),
-        UoWProvider()
+        RepoProvider(),
+        ServiceProvider(),
     )
     setup_dishka(container=container, app=app)
 

@@ -1,8 +1,8 @@
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
-from dishka.integrations.fastapi import FromDishka, inject, DishkaRoute
+from dishka.integrations.fastapi import FromDishka, DishkaRoute
+from fastapi import APIRouter, HTTPException
+
 from src.dtos.users import UserCreateDTO, UserReadDTO
 from src.exceptions.users import EmailAlreadyExistsException, UsernameAlreadyExistsException, EmailNotFoundException
 from src.services.user_service import UserService
@@ -14,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=HTTPStatus.CREATED)
 async def create_user(dto: UserCreateDTO, service: FromDishka[UserService]):
     try:
         await service.create(dto)
@@ -26,7 +26,7 @@ async def create_user(dto: UserCreateDTO, service: FromDishka[UserService]):
         )
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=UserReadDTO)
+@router.get("/", status_code=HTTPStatus.OK, response_model=UserReadDTO)
 async def get_user_by_email(email: str, service: FromDishka[UserService]):
     try:
         return await service.get_by_email(email=email)

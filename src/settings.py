@@ -39,6 +39,3 @@ class Settings(BaseSettings):
     rabbitmq: RabbitMQSettings
 
     password: PasswordSettings
-
-
-settings = Settings()
