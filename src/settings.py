@@ -22,6 +22,13 @@ class RabbitMQSettings(BaseModel):
     url: SecretStr
 
 
+class JWTSettings(BaseModel):
+    secret_key: SecretStr
+    algorithm: str
+    ttl: int
+    refresh_ttl: int
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -39,3 +46,5 @@ class Settings(BaseSettings):
     rabbitmq: RabbitMQSettings
 
     password: PasswordSettings
+
+    jwt: JWTSettings

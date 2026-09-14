@@ -3,7 +3,9 @@ from typing import AsyncIterable
 from dishka import Provider, provide, Scope
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
 
+from src.repos.refresh_token_repo import RefreshTokenRepository
 from src.repos.user_repo import UserRepository
+from src.services.jwt_service import JWTService
 from src.services.password import PasswordHash
 from src.services.user_service import UserService
 from src.settings import Settings
@@ -60,16 +62,33 @@ class RepoProvider(Provider):
     def get_user_repo(self, session: AsyncSession) -> UserRepository:
         return UserRepository(session)
 
+    @provide
+    def get_jwt_repo(self, session: AsyncSession) -> RefreshTokenRepository:
+        return RefreshTokenRepository(session)
+
+
 class ServiceProvider(Provider):
     scope = Scope.REQUEST
+
     @provide
     def get_service(self,
-                          user_repo: UserRepository,
-                          session: AsyncSession,
-                          password_hash: PasswordHash,
-                          ) -> UserService:
+                    user_repo: UserRepository,
+                    session: AsyncSession,
+                    password_hash: PasswordHash,
+                    ) -> UserService:
         return UserService(
             password_hash=password_hash,
             user_repository=user_repo,
             session=session,
+        )
+
+    @provide
+    def get_jwt_service(self, settings: Settings, repo: RefreshTokenRepository, session: AsyncSession) -> JWTService:
+        return JWTService(
+            secret=settings.jwt.secret_key.get_secret_value(),
+            algorithm=settings.jwt.algorithm,
+            ttl_minutes=settings.jwt.ttl,
+            refresh_ttl_day=settings.jwt.refresh_ttl,
+            refresh_token_repo=repo,
+            session=session
         )

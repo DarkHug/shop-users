@@ -3,6 +3,7 @@ import uuid
 from sqlalchemy import String, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.models.refresh_token import RefreshToken
 from src.models.base import Base
 
 
@@ -16,6 +17,9 @@ class User(Base):
     password_salt: Mapped[str] = mapped_column(String(255), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     verification_code: Mapped["UserCodeVerifications"] = relationship(
+        back_populates="user"
+    )
+    refresh_token: Mapped[list[RefreshToken]] = relationship(
         back_populates="user"
     )
 
