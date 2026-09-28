@@ -44,3 +44,8 @@ class UserReadDTO(BaseModel):
     username: str
     email: EmailStr
     is_verified: bool
+
+
+class UserLoginDTO(BaseModel):
+    email: EmailStr
+    password: str

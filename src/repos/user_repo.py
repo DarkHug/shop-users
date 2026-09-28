@@ -1,3 +1,5 @@
+import uuid
+
 import asyncpg
 from sqlalchemy import select, insert
 from sqlalchemy.exc import IntegrityError
@@ -37,4 +39,9 @@ class UserRepository:
         query = select(User).where(User.email == email)
         result = await self._session.execute(query)
 
+        return result.scalar_one_or_none()
+
+    async def get_by_id(self, user_id: uuid.UUID) -> User | None:
+        query = select(User).where(User.id == user_id)
+        result = await self._session.execute(query)
         return result.scalar_one_or_none()

@@ -1,4 +1,5 @@
 import hashlib
+import hmac
 
 
 class PasswordHash:
@@ -11,3 +12,6 @@ class PasswordHash:
         for i in range(self._hash_iterations):
             password_to_hash = hashlib.sha256(password_to_hash.encode()).hexdigest()
         return password_to_hash
+
+    def verify(self, plain_password: str, db_password: str, salt: str) -> bool:
+        return hmac.compare_digest(self.hash(plain_password, salt), db_password)
