@@ -1,11 +1,10 @@
 import uuid
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, insert, update
-
-from src.models import RefreshToken
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dtos.auth import RefreshTokenCreateDBDTO
+from src.models import RefreshToken
 
 
 class RefreshTokenRepository:
@@ -29,5 +28,3 @@ class RefreshTokenRepository:
     async def revoke_all_for_user(self, user_id: uuid.UUID) -> None:
         query = update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=True)
         await self._session.execute(query)
-
-

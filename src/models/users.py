@@ -3,8 +3,8 @@ import uuid
 from sqlalchemy import String, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.refresh_token import RefreshToken
 from src.models.base import Base
+from src.models.refresh_token import RefreshToken
 
 
 class User(Base):

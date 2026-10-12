@@ -71,24 +71,29 @@ class ServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def get_service(self,
-                    user_repo: UserRepository,
-                    session: AsyncSession,
-                    password_hash: PasswordHash,
-                    ) -> UserService:
-        return UserService(
-            password_hash=password_hash,
-            user_repository=user_repo,
-            session=session,
-        )
-
-    @provide
-    def get_jwt_service(self, settings: Settings, repo: RefreshTokenRepository, session: AsyncSession) -> JWTService:
+    def get_jwt_service(self, settings: Settings) -> JWTService:
         return JWTService(
             secret=settings.jwt.secret_key.get_secret_value(),
             algorithm=settings.jwt.algorithm,
             ttl_minutes=settings.jwt.ttl,
+        )
+
+    @provide
+    def get_user_service(self,
+                         user_repo: UserRepository,
+                         session: AsyncSession,
+                         password_hash: PasswordHash,
+                         jwt_service: JWTService,
+                         refresh_token_repo: RefreshTokenRepository,
+                         settings: Settings
+                         ) -> UserService:
+        return UserService(
+            password_hash=password_hash,
+            user_repository=user_repo,
+            session=session,
+            jwt_service=jwt_service,
+            refresh_token_repo=refresh_token_repo,
+            secret=settings.jwt.secret_key.get_secret_value(),
+            algorithm=settings.jwt.algorithm,
             refresh_ttl_day=settings.jwt.refresh_ttl,
-            refresh_token_repo=repo,
-            session=session
         )
