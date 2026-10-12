@@ -1,11 +1,13 @@
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
+import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dtos.auth import TokenReturnDTO, RefreshTokenCreateDBDTO
 from src.dtos.users import UserCreateDTO, UserCreateDBDTO
+from src.exceptions.auth import AccessTokenExpired, AccessTokenInvalid
 from src.exceptions.auth import RefreshTokenNotFound, RefreshTokenReused, RefreshTokenExpired
 from src.exceptions.users import EmailNotFoundException, InvalidCredentialsException, UserNotFoundException
 from src.models import User
@@ -22,12 +24,18 @@ class UserService:
                  jwt_service: JWTService,
                  refresh_token_repo: RefreshTokenRepository,
                  session: AsyncSession,
+                 secret: str,
+                 algorithm: str,
+                 refresh_ttl_day: int
                  ):
         self.user_repository = user_repository
         self._session = session
         self.password_hash = password_hash
         self.jwt_service = jwt_service
         self._refresh_token_repo = refresh_token_repo
+        self._secret = secret
+        self._algorithm = algorithm
+        self._refresh_ttl_day = refresh_ttl_day
 
     async def create(self, dto: UserCreateDTO) -> User:
         salt = secrets.token_hex(64)
@@ -55,7 +63,7 @@ class UserService:
         db_dto = RefreshTokenCreateDBDTO(
             user_id=user_id,
             token_hash=self.jwt_service.hash_token_raw(raw_refresh_token),
-            expires_at=self.jwt_service.get_refresh_expiry(),
+            expires_at=self.get_refresh_expiry(),
         )
 
         await self._refresh_token_repo.create(db_dto)
@@ -104,3 +112,17 @@ class UserService:
         if result is None:
             raise UserNotFoundException
         return result
+
+    def get_refresh_expiry(self) -> datetime:
+        return datetime.now(timezone.utc) + timedelta(days=self._refresh_ttl_day)
+
+    def verify_access_token(self, token: str) -> uuid.UUID:
+        try:
+            payload = jwt.decode(token, self._secret, algorithms=[self._algorithm])
+        except jwt.ExpiredSignatureError:
+            raise AccessTokenExpired
+        except jwt.InvalidTokenError:
+            raise AccessTokenInvalid
+
+        user_id = uuid.UUID(payload.get("sub"))
+        return user_id
