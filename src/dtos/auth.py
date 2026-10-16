@@ -17,3 +17,9 @@ class TokenReturnDTO(BaseModel):
 
 class RefreshTokenRequestDTO(BaseModel):
     refresh_token: str
+
+
+class GoogleUserInfoDTO(BaseModel):
+    sub: str
+    email: str
+    email_verified: bool

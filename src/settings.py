@@ -29,6 +29,12 @@ class JWTSettings(BaseModel):
     refresh_ttl: int
 
 
+class OAuthSettings(BaseSettings):
+    google_client_id: str
+    google_client_secret: SecretStr
+    google_redirect_uri: str
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -48,3 +54,5 @@ class Settings(BaseSettings):
     password: PasswordSettings
 
     jwt: JWTSettings
+
+    oauth: OAuthSettings
