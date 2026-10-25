@@ -33,6 +33,12 @@ class OAuthSettings(BaseSettings):
     google_client_id: str
     google_client_secret: SecretStr
     google_redirect_uri: str
+    state_ttl_seconds: int
+
+
+class RedisSettings(BaseSettings):
+    host: str
+    port: int
 
 
 class Settings(BaseSettings):
@@ -56,3 +62,5 @@ class Settings(BaseSettings):
     jwt: JWTSettings
 
     oauth: OAuthSettings
+
+    redis: RedisSettings

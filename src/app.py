@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 import src.routes as routes
-from src.providers import AppProvider, DatabaseProvider, PasswordProvider, ServiceProvider, RepoProvider
+from src.providers import AppProvider, DatabaseProvider, PasswordProvider, ServiceProvider, RepoProvider, HTTPXProvider, RedisProvider
 from src.settings import Settings
 
 
@@ -22,6 +22,8 @@ def create_app() -> FastAPI:
         PasswordProvider(),
         RepoProvider(),
         ServiceProvider(),
+        HTTPXProvider(),
+        RedisProvider(),
     )
     setup_dishka(container=container, app=app)
 
