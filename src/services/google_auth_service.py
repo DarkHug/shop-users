@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.dtos.oauth import URLReturnDTO
 from src.dtos.auth import TokenReturnDTO
 from src.dtos.users import OAuthAccountCreateDBDTO
 from src.dtos.users import UserOAuthCreateDBDTO
@@ -30,11 +31,11 @@ class GoogleAuthService:
         self._google_oauth_client = google_oauth_client
         self._token_service = token_service
 
-    async def get_authorization_url(self) -> str:
+    async def get_authorization_url(self) -> URLReturnDTO:
         state = generate_state()
         pkce = generate_pkce()
         await self._oauth_state_repo.save(state, pkce.verifier)
-        return self._google_oauth_client.authorization_url(state, pkce.challenge)
+        return URLReturnDTO(url=self._google_oauth_client.authorization_url(state, pkce.challenge))
 
     async def login(self, code: str, state: str) -> TokenReturnDTO:
         verifier = await self._oauth_state_repo.get_and_delete(state)

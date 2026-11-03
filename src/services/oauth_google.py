@@ -4,7 +4,7 @@ import httpx
 import jwt
 from jwt import PyJWKClient
 
-from src.dtos.auth import GoogleUserInfoDTO
+from src.dtos.auth import OAuthUserInfoDTO
 from src.exceptions.oauth import OAuthProviderUnavailable, OAuthCodeExchangeError, OAuthValidationError
 
 
@@ -66,7 +66,7 @@ class GoogleOAuthClient:
         except httpx.RequestError as err:
             raise OAuthProviderUnavailable(str(err)) from err
 
-    def check_id_token(self, id_token: str) -> GoogleUserInfoDTO:
+    def check_id_token(self, id_token: str) -> OAuthUserInfoDTO:
         try:
             signing_key = self._jwk_client.get_signing_key_from_jwt(id_token).key
             data = jwt.decode(id_token,
@@ -75,6 +75,6 @@ class GoogleOAuthClient:
                               audience=self._client_id,
                               issuer=self.ISSUERS,
                               )
-            return GoogleUserInfoDTO(**data)
+            return OAuthUserInfoDTO(**data)
         except jwt.exceptions.PyJWTError as err:
             raise OAuthValidationError(str(err)) from err
