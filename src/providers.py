@@ -9,7 +9,9 @@ from src.repos.oauth_account_repo import OAuthAccountRepository
 from src.repos.oauth_state_repo import OAuthStateRepository
 from src.repos.refresh_token_repo import RefreshTokenRepository
 from src.repos.user_repo import UserRepository
+from src.services.google_auth_service import GoogleAuthService
 from src.services.jwt_service import JWTService
+from src.services.oauth_github import GitHubOAuthClient
 from src.services.oauth_google import GoogleOAuthClient
 from src.services.password import PasswordHash
 from src.services.token_service import TokenService
@@ -94,7 +96,7 @@ class RepoProvider(Provider):
 
     @provide
     def get_oauth_repo(self, redis: Redis, settings: Settings) -> OAuthStateRepository:
-        return OAuthStateRepository(redis, settings.oauth.state_ttl_seconds)
+        return OAuthStateRepository(redis, settings.google_oauth.state_ttl_seconds)
 
     @provide
     def get_oauth_account_repo(self, session: AsyncSession) -> OAuthAccountRepository:
@@ -147,8 +149,38 @@ class ServiceProvider(Provider):
                                 httpx_client: httpx.AsyncClient,
                                 ) -> GoogleOAuthClient:
         return GoogleOAuthClient(
-            client_id=settings.oauth.google_client_id,
-            client_secret=settings.oauth.google_client_secret.get_secret_value(),
-            redirect_uri=settings.oauth.google_redirect_uri,
+            client_id=settings.google_oauth.client_id,
+            client_secret=settings.google_oauth.client_secret.get_secret_value(),
+            redirect_uri=settings.google_oauth.redirect_uri,
             httpx_client=httpx_client,
+        )
+
+    @provide(scope=Scope.APP)
+    def get_github_oauth_client(self,
+                                settings: Settings,
+                                httpx_client: httpx.AsyncClient,
+                                ) -> GitHubOAuthClient:
+        return GitHubOAuthClient(
+            client_id=settings.github_oauth.client_id,
+            client_secret=settings.github_oauth.client_secret.get_secret_value(),
+            redirect_uri=settings.github_oauth.redirect_uri,
+            httpx_client=httpx_client,
+        )
+
+    @provide
+    def get_google_auth_service(self,
+                                session: AsyncSession,
+                                oauth_account_repo: OAuthAccountRepository,
+                                oauth_state_repo: OAuthStateRepository,
+                                user_repo: UserRepository,
+                                google_oauth_client: GoogleOAuthClient,
+                                token_service: TokenService,
+                                ) -> GoogleAuthService:
+        return GoogleAuthService(
+            session=session,
+            oauth_account_repo=oauth_account_repo,
+            oauth_state_repo=oauth_state_repo,
+            user_repo=user_repo,
+            google_oauth_client=google_oauth_client,
+            token_service=token_service,
         )

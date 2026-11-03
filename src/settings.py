@@ -29,10 +29,17 @@ class JWTSettings(BaseModel):
     refresh_ttl: int
 
 
-class OAuthSettings(BaseSettings):
-    google_client_id: str
-    google_client_secret: SecretStr
-    google_redirect_uri: str
+class GoogleOAuthSettings(BaseSettings):
+    client_id: str
+    client_secret: SecretStr
+    redirect_uri: str
+    state_ttl_seconds: int
+
+
+class GitHubOAuthSettings(BaseSettings):
+    client_id: str
+    client_secret: SecretStr
+    redirect_uri: str
     state_ttl_seconds: int
 
 
@@ -61,6 +68,7 @@ class Settings(BaseSettings):
 
     jwt: JWTSettings
 
-    oauth: OAuthSettings
+    google_oauth: GoogleOAuthSettings
+    github_oauth: GitHubOAuthSettings
 
     redis: RedisSettings
