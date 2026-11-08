@@ -2,10 +2,12 @@ import secrets
 import uuid
 from datetime import datetime, timezone
 
+import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dtos.auth import TokenReturnDTO
 from src.dtos.users import UserCreateDTO, UserCreateDBDTO
+from src.exceptions.auth import AccessTokenExpired, AccessTokenInvalid
 from src.exceptions.auth import RefreshTokenNotFound, RefreshTokenReused, RefreshTokenExpired
 from src.exceptions.users import EmailNotFoundException, InvalidCredentialsException, UserNotFoundException
 from src.models import User
@@ -23,7 +25,9 @@ class UserService:
                  jwt_service: JWTService,
                  refresh_token_repo: RefreshTokenRepository,
                  session: AsyncSession,
-                 token_service: TokenService
+                 token_service: TokenService,
+                 secret: str,
+                 algorithm: str,
                  ):
         self._user_repository = user_repository
         self._session = session
@@ -31,6 +35,8 @@ class UserService:
         self._jwt_service = jwt_service
         self._refresh_token_repo = refresh_token_repo
         self._token_service = token_service
+        self._secret = secret
+        self._algorithm = algorithm
 
     async def create(self, dto: UserCreateDTO) -> User:
         salt = secrets.token_hex(64)
@@ -51,7 +57,9 @@ class UserService:
         return result
 
     async def refresh_tokens(self, raw_refresh_token: str) -> TokenReturnDTO:
-        stored_token = await self._refresh_token_repo.get_by_hash(self._jwt_service.hash_token_raw(raw_refresh_token))
+        stored_token = await self._refresh_token_repo.get_by_hash(
+            self._jwt_service.hash_token_raw(raw_refresh_token)
+        )
         if stored_token is None:
             raise RefreshTokenNotFound
         user_id = stored_token.user_id
@@ -63,7 +71,6 @@ class UserService:
             raise RefreshTokenExpired
 
         await self._refresh_token_repo.revoke(stored_token)
-
         result = await self._token_service.create_token_pair(user_id=user_id)
         await self._session.commit()
         return result
@@ -74,16 +81,19 @@ class UserService:
         except EmailNotFoundException:
             raise InvalidCredentialsException
 
-        if user.hashed_password is None or not self._password_hash.verify(password, user.hashed_password, user.password_salt):
+        if user.hashed_password is None or not self._password_hash.verify(
+            password, user.hashed_password, user.password_salt
+        ):
             raise InvalidCredentialsException
 
         res = await self._token_service.create_token_pair(user_id=user.id)
         await self._session.commit()
-
         return res
 
     async def logout(self, raw_token: str) -> None:
-        stored_token = await self._refresh_token_repo.get_by_hash(self._jwt_service.hash_token_raw(raw_token))
+        stored_token = await self._refresh_token_repo.get_by_hash(
+            self._jwt_service.hash_token_raw(raw_token)
+        )
         if stored_token is None:
             raise RefreshTokenNotFound
         await self._refresh_token_repo.revoke(stored_token)
@@ -94,3 +104,13 @@ class UserService:
         if result is None:
             raise UserNotFoundException
         return result
+
+    def verify_access_token(self, token: str) -> uuid.UUID:
+        try:
+            payload = jwt.decode(token, self._secret, algorithms=[self._algorithm])
+        except jwt.ExpiredSignatureError:
+            raise AccessTokenExpired
+        except jwt.InvalidTokenError:
+            raise AccessTokenInvalid
+
+        return uuid.UUID(payload.get("sub"))

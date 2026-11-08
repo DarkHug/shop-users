@@ -114,17 +114,18 @@ class ServiceProvider(Provider):
             secret=settings.jwt.secret_key.get_secret_value(),
             algorithm=settings.jwt.algorithm,
             ttl_minutes=settings.jwt.ttl,
-            refresh_ttl_day=settings.jwt.refresh_ttl,
         )
 
     @provide
     def get_token_service(self,
                           jwt_service: JWTService,
                           refresh_token_repo: RefreshTokenRepository,
+                          settings: Settings,
                           ) -> TokenService:
         return TokenService(
             jwt_service=jwt_service,
             refresh_token_repo=refresh_token_repo,
+            refresh_ttl_day=settings.jwt.refresh_ttl,
         )
 
     @provide
@@ -135,6 +136,7 @@ class ServiceProvider(Provider):
                          jwt_service: JWTService,
                          refresh_token_repo: RefreshTokenRepository,
                          token_service: TokenService,
+                         settings: Settings,
                          ) -> UserService:
         return UserService(
             password_hash=password_hash,
@@ -143,6 +145,8 @@ class ServiceProvider(Provider):
             jwt_service=jwt_service,
             refresh_token_repo=refresh_token_repo,
             token_service=token_service,
+            secret=settings.jwt.secret_key.get_secret_value(),
+            algorithm=settings.jwt.algorithm,
         )
 
     @provide(scope=Scope.APP)
