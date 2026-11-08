@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import src.exceptions.users as user_exceptions
-from src.dtos.users import UserCreateDBDTO
+from src.dtos.users import UserCreateDBDTO, UserOAuthCreateDBDTO
 from src.models import User
 
 
@@ -17,7 +17,7 @@ class UserRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(self, dto: UserCreateDBDTO) -> User:
+    async def create(self, dto: UserCreateDBDTO | UserOAuthCreateDBDTO) -> User:
         new_user = insert(User).values(dto.model_dump()).returning(User)
 
         try:

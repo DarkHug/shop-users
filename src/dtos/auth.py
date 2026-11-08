@@ -17,3 +17,9 @@ class TokenReturnDTO(BaseModel):
 
 class RefreshTokenRequestDTO(BaseModel):
     refresh_token: str
+
+
+class OAuthUserInfoDTO(BaseModel):
+    sub: str
+    email: str | None
+    email_verified: bool

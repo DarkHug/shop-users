@@ -29,6 +29,25 @@ class JWTSettings(BaseModel):
     refresh_ttl: int
 
 
+class GoogleOAuthSettings(BaseSettings):
+    client_id: str
+    client_secret: SecretStr
+    redirect_uri: str
+    state_ttl_seconds: int
+
+
+class GitHubOAuthSettings(BaseSettings):
+    client_id: str
+    client_secret: SecretStr
+    redirect_uri: str
+    state_ttl_seconds: int
+
+
+class RedisSettings(BaseSettings):
+    host: str
+    port: int
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -48,3 +67,8 @@ class Settings(BaseSettings):
     password: PasswordSettings
 
     jwt: JWTSettings
+
+    google_oauth: GoogleOAuthSettings
+    github_oauth: GitHubOAuthSettings
+
+    redis: RedisSettings

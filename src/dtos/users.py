@@ -2,10 +2,10 @@ import re
 import uuid
 
 from pydantic import BaseModel, field_validator, EmailStr
-
+from src.models.oauth import Provider
 
 class UserCreateDTO(BaseModel):
-    username: str
+    username: str | None
     email: EmailStr
     password: str
 
@@ -39,9 +39,20 @@ class UserCreateDBDTO(BaseModel):
     password_salt: str
 
 
+class UserOAuthCreateDBDTO(BaseModel):
+    email: EmailStr
+    is_verified: bool = True
+
+
+class OAuthAccountCreateDBDTO(BaseModel):
+    sub: str
+    provider: Provider
+    user_id: uuid.UUID
+
+
 class UserReadDTO(BaseModel):
     id: uuid.UUID
-    username: str
+    username: str | None
     email: EmailStr
     is_verified: bool
 
