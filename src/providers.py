@@ -5,14 +5,16 @@ from dishka import Provider, provide, Scope
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
 
+from src.clients.base import OAuthClient
+from src.models.oauth import Provider as OAuthProvider
 from src.repos.oauth_account_repo import OAuthAccountRepository
 from src.repos.oauth_state_repo import OAuthStateRepository
 from src.repos.refresh_token_repo import RefreshTokenRepository
 from src.repos.user_repo import UserRepository
-from src.services.google_auth_service import GoogleAuthService
+from src.services.oauth_service import OAuthService
 from src.services.jwt_service import JWTService
-from src.services.oauth_github import GitHubOAuthClient
-from src.services.oauth_google import GoogleOAuthClient
+from src.clients.oauth_github import GitHubOAuthClient
+from src.clients.oauth_google import GoogleOAuthClient
 from src.services.password import PasswordHash
 from src.services.token_service import TokenService
 from src.services.user_service import UserService
@@ -167,20 +169,27 @@ class ServiceProvider(Provider):
             httpx_client=httpx_client,
         )
 
+    @provide(scope=Scope.APP)
+    def get_oauth_clients(self, google: GoogleOAuthClient, github: GitHubOAuthClient) -> dict[OAuthProvider, OAuthClient]:
+        return {
+            OAuthProvider.GOOGLE: google,
+            OAuthProvider.GITHUB: github,
+        }
+
     @provide
-    def get_google_auth_service(self,
+    def get_oauth_service(self,
                                 session: AsyncSession,
                                 oauth_account_repo: OAuthAccountRepository,
                                 oauth_state_repo: OAuthStateRepository,
                                 user_repo: UserRepository,
-                                google_oauth_client: GoogleOAuthClient,
+                                clients: dict[OAuthProvider, OAuthClient],
                                 token_service: TokenService,
-                                ) -> GoogleAuthService:
-        return GoogleAuthService(
+                                ) -> OAuthService:
+        return OAuthService(
             session=session,
             oauth_account_repo=oauth_account_repo,
             oauth_state_repo=oauth_state_repo,
             user_repo=user_repo,
-            google_oauth_client=google_oauth_client,
+            clients=clients,
             token_service=token_service,
         )

@@ -8,7 +8,7 @@ from src.oauth_utils import generate_state, generate_pkce
 from src.repos.oauth_account_repo import OAuthAccountRepository
 from src.repos.oauth_state_repo import OAuthStateRepository
 from src.repos.user_repo import UserRepository
-from src.services.oauth_github import GitHubOAuthClient
+from clients.oauth_github import GitHubOAuthClient
 from src.services.token_service import TokenService
 
 
@@ -39,7 +39,7 @@ class GithubAuthService:
         if verifier is None:
             raise OAuthStateInvalid
         user_token = await self._github_oauth_client.token_exchange(code, verifier)
-        user_info = await self._github_oauth_client.get_user_info(user_token)
+        user_info = await self._github_oauth_client._fetch_profile(user_token)
         if not user_info.email_verified:
             raise OAuthEmailNotVerified
 

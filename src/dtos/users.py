@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator, EmailStr
 from src.models.oauth import Provider
 
 class UserCreateDTO(BaseModel):
-    username: str
+    username: str | None
     email: EmailStr
     password: str
 
@@ -52,7 +52,7 @@ class OAuthAccountCreateDBDTO(BaseModel):
 
 class UserReadDTO(BaseModel):
     id: uuid.UUID
-    username: str
+    username: str | None
     email: EmailStr
     is_verified: bool
 

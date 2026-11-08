@@ -4,7 +4,7 @@ import hashlib
 import secrets
 
 import httpx
-from src.services.oauth_github import GitHubOAuthClient
+from clients.oauth_github import GitHubOAuthClient
 
 CLIENT_ID = "Ov23liVRgKbTBqlj3f3P"
 CLIENT_SECRET = "acd659398f83bf54529f550671a76a5dfc65e082"
@@ -51,9 +51,7 @@ async def main():
 
         print("\nAccess Token успешно получен!")
 
-        user_info = await github.get_user_info(
-            access_token=token,
-        )
+        user_info = await github._fetch_profile(access_token=token)
 
         print("\nИнформация о пользователе:")
         print(user_info)

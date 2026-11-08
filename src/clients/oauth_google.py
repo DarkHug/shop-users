@@ -43,7 +43,7 @@ class GoogleOAuthClient:
         }
         return f"{self.AUTHORIZATION_ENDPOINT}?{urlencode(params)}"
 
-    async def token_exchange(self, code: str, code_verifier: str) -> str:
+    async def _token_exchange(self, code: str, code_verifier: str) -> str:
         """
         Возвращает id-token
         """
@@ -66,7 +66,7 @@ class GoogleOAuthClient:
         except httpx.RequestError as err:
             raise OAuthProviderUnavailable(str(err)) from err
 
-    def check_id_token(self, id_token: str) -> OAuthUserInfoDTO:
+    def _check_id_token(self, id_token: str) -> OAuthUserInfoDTO:
         try:
             signing_key = self._jwk_client.get_signing_key_from_jwt(id_token).key
             data = jwt.decode(id_token,
@@ -78,3 +78,7 @@ class GoogleOAuthClient:
             return OAuthUserInfoDTO(**data)
         except jwt.exceptions.PyJWTError as err:
             raise OAuthValidationError(str(err)) from err
+
+    async def get_user_info(self, code: str, code_verifier: str) -> OAuthUserInfoDTO:
+        id_token = await self._token_exchange(code, code_verifier)
+        return self._check_id_token(id_token)
